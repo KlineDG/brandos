@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS variables for theming (HSL) */
+:root {
+  /* Light theme */
+  --bg: 0 0% 99%;
+  --fg: 222 35% 12%;
+  --muted: 220 14% 96%;
+  --card: 0 0% 100%;
+  --border: 220 13% 88%;
+  --primary: 262 83% 58%;
+  --primary-fg: 0 0% 100%;
+  --accent: 210 100% 50%;
+}
+
+.dark {
+  /* Dark steel gray theme */
+  --bg: 220 15% 10%;       /* page background */
+  --fg: 210 15% 92%;       /* primary text */
+  --muted: 220 12% 16%;    /* subtle surfaces */
+  --card: 220 14% 12%;     /* cards / panels */
+  --border: 215 14% 22%;   /* hairline borders */
+  --primary: 262 83% 70%;
+  --primary-fg: 224 71% 4%;
+  --accent: 210 100% 60%;
+}
+
+/* Base styling */
+html, body, :root {
+  height: 100%;
+  background-color: hsl(var(--bg));
+  color: hsl(var(--fg));
+}
+
+/* Hairline borders */
+.border-hairline {
+  border: 1px solid hsl(var(--border) / 0.6);
+}
+
+.bg-glass {
+  background: linear-gradient(
+    to bottom right,
+    hsl(var(--card) / 0.75),
+    hsl(var(--card) / 0.55)
+  );
+  backdrop-filter: blur(12px);
+}
+
+/* Subtle grid backdrop */
+.bg-grid {
+  background-image: theme('backgroundImage.grid');
+  background-size: 24px 24px;
+}
+
