@@ -4,9 +4,12 @@ import Header from "@/components/header";
 import Sidebar from "@/components/sidebar";
 import ChatInput from "@/components/chat-input";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import axios from "axios";
+import { use, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase"; 
+import { getCurrentUser } from "@/lib/utils";
 
 type FolderItem = { id: string; name: string; emoji?: string; count?: number };
 
@@ -23,6 +26,9 @@ export default function HomeShell({
 
   // sidebar visibility persisted
   const [navOpen, setNavOpen] = useState(true);
+  const [userId, setUserId] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
+
   useEffect(() => {
     const saved = localStorage.getItem("nav-open");
     if (saved !== null) setNavOpen(saved === "1");
@@ -30,6 +36,19 @@ export default function HomeShell({
   useEffect(() => {
     localStorage.setItem("nav-open", navOpen ? "1" : "0");
   }, [navOpen]);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const user = await getCurrentUser();
+      if (!user) {
+        router.push("/login");
+      }
+      setUserId(user?.id);
+      setUserEmail(user?.email);
+    };
+    fetchUser();
+    
+  }, []);
 
   return (
     <div className="min-h-screen">

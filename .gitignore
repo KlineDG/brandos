@@ -1,0 +1,6 @@
+
+.env
+.env.*
+!.env.example
+back-end/.env
+front-end/.env.local

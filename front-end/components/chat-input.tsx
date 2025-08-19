@@ -5,9 +5,13 @@ import { Send } from "lucide-react";
 export default function ChatInput({
   placeholder = "Ask BrandBot anything…",
   onSubmit,
+  onChange,
+  onFocus,
 }: {
   placeholder?: string;
   onSubmit?: (value: string) => void;
+  onChange?: (value: string) => void;
+  onFocus?: () => void;
 }) {
   const [value, setValue] = useState("");
 
@@ -17,16 +21,18 @@ export default function ChatInput({
     if (!v) return;
     onSubmit?.(v);
     setValue("");
+    onChange?.("");
   }
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-hairline bg-glass rounded-2xl p-2 pl-3 flex items-center gap-2 shadow-soft"
+      className="border-hairline rounded-2xl p-2 pl-3 flex items-center gap-2 shadow-soft"
     >
       <input
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => { setValue(e.target.value); onChange?.(e.target.value); }}
+        onFocus={() => onFocus?.()}
         placeholder={placeholder}
         className="bg-transparent outline-none w-full text-[15px] placeholder:opacity-50"
       />
@@ -41,4 +47,5 @@ export default function ChatInput({
     </form>
   );
 }
+
 
