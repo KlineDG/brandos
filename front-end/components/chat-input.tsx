@@ -7,11 +7,13 @@ export default function ChatInput({
   onSubmit,
   onChange,
   onFocus,
+  onBlur,
 }: {
   placeholder?: string;
   onSubmit?: (value: string) => void;
   onChange?: (value: string) => void;
   onFocus?: () => void;
+  onBlur?: () => void;
 }) {
   const [value, setValue] = useState("");
 
