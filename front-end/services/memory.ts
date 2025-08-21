@@ -12,9 +12,9 @@ export async function saveMessages(sessionId: string, messages: APIMessage[], to
   await api.post("/memory/messages/save", { session_id: sessionId, messages }, token);
 }
 
-export async function summarize(messages: APIMessage[]) {
+export async function summarize(messages: APIMessage[], token?: string) {
   type Resp = { summary: string };
-  const r = await api.post<Resp>("/chat/summarize", { messages });
+  const r = await api.post<Resp>("/chat/summarize", { messages }, token);
   return r.summary;
 }
 

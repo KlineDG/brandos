@@ -16,47 +16,46 @@ count?: number | null;
 
 
 type Props = {
-folders?: FolderItem[];
-activeFolderId?: string | null;
-onSelectFolder?: (id: string) => void;
-onNewProject?: () => void;
-onSearch?: (q: string) => void;
-onClickProjects?: () => void;
-className?: string;
+    folders?: FolderItem[];
+    activeFolderId?: string | null;
+    onSelectFolder?: (id: string) => void;
+    onNewProject?: () => void;
+    onSearch?: (q: string) => void;
+    onClickProjects?: () => void;
+    className?: string;
 };
 
 
 export default function Sidebar({
-folders = [],
-activeFolderId,
-onSelectFolder,
-onNewProject,
-onSearch,
-onClickProjects,
-className,
-}: Props) {
-const [query, setQuery] = useState("");
+    folders = [],
+        activeFolderId,
+        onSelectFolder,
+        onNewProject,
+        onSearch,
+        onClickProjects,
+        className,
+    }: Props) {
+    const [query, setQuery] = useState("");
 
-
-const filtered = useMemo(() => {
-const q = query.trim().toLowerCase();
-if (!q) return folders;
-return folders.filter((f) => {
-const label = (f.custom_name || f.name || f.id).toLowerCase();
-return label.includes(q) || (f.emoji || "").includes(q);
-});
+    const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return folders;
+        return folders.filter((f) => {
+        const label = (f.custom_name || f.name || f.id).toLowerCase();
+        return label.includes(q) || (f.emoji || "").includes(q);
+    });
 }, [folders, query]);
-return (
-<aside
-className={cn(
-"shrink-0 border-r border-hairline bg-glass",
-"sticky top-16 h-[calc(100vh-4rem)]",
-"px-3 py-3 flex flex-col gap-3",
-"w-72", // fixed width for layout stability
-className
-)}
-aria-label="Sidebar"
->
+    return (
+    <aside
+        className={cn(
+        "shrink-0 border-r border-hairline bg-glass",
+        "sticky top-16 h-[calc(100vh-4rem)]",
+        "px-3 py-3 flex flex-col gap-3",
+        "w-72", // fixed width for layout stability
+        className
+        )}
+        aria-label="Sidebar"
+    >
 {/* New Project */}
 <div className="flex items-center">
 <button
@@ -105,7 +104,7 @@ aria-label="Search folders"
 )}
 {filtered.map((f) => {
 const active = f.id === activeFolderId;
-const label = f.custom_name || f.name || f.id.slice(0, 8);
+const label = f.custom_name || f.name || f.id.slice(0, 4);
 return (
 <li key={f.id}>
 <button

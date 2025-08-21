@@ -18,11 +18,11 @@ export async function getCurrentUser() {
     return null;
   }
   // Step 2: Use the email from auth to fetch full user record from your 'users' table
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .ilike("email", user.email)
-    .maybeSingle(); // ✅ Avoids errors when no rows found
+const { data, error } = await supabase
+  .from("users")
+  .select("*")
+  .eq("id", user.id)   // <-- safer than ilike(email)
+  .maybeSingle();
 
   if (error) {
     console.error("Error fetching user details:", error.message);

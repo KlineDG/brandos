@@ -1,3 +1,5 @@
+// routes/brand.js
+
 import express from "express";
 import { custom, z } from "zod";
 import { createClient } from "@supabase/supabase-js";

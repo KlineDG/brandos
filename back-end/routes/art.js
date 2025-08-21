@@ -1,4 +1,5 @@
 // routes/art.js
+
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";

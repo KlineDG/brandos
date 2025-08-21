@@ -11,6 +11,8 @@ import ChatInput from "@/components/chat-input";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
+import { getCurrentUser } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 // Types
@@ -25,9 +27,37 @@ export default function ChatDashboard() {
   const [navOpen, setNavOpen] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typing, setTyping] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [user, setUser] = useState<any | null>(null);
+  const [folders, setFolders] = useState<any[]>([]);
 
   const listRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const userId = user?.id || null;
+      const fullUser = await getCurrentUser();
+
+      setUserId(userId);
+      setUser(fullUser);
+
+      const { data: folders, error: fErr } = await supabase
+      .from("folders")
+      .select("id, custom_name, brand_id, dca_id, session_id, status, created_at")
+      .order("created_at", { ascending: false })        // newest first
+      .limit(50);                                       // adjust as needed
+
+    if (fErr) {
+      console.error("Folders fetch error:", fErr.message);
+    } else {
+      setFolders(folders || []); // make sure you have setFolders in state
+    }
+    };
+    fetchUser();
+  }, []);
 
   // Auto-scroll handling
   useEffect(() => {
@@ -113,7 +143,7 @@ console.log("Hello World!");
     <div className="min-h-screen flex flex-col">
       <Header />
       <div className="flex flex-1 min-h-0">
-        {navOpen && <Sidebar />}
+        {navOpen && <Sidebar folders={folders} />}
 
         <div className="flex-1 relative flex flex-col">
           {/* Toggle button — fixed so it isn't affected by scroll */}

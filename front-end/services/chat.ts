@@ -1,4 +1,4 @@
-import { getAccessToken } from "@/lib/auth";
+import { getAccessToken } from "@/lib/supabase";
 import { api } from "@/lib/api";
 import { fetchCombinedSummary, saveMessages, summarize, saveChunk, APIMessage } from "./memory";
 import { SUMMARY_THRESHOLD } from "@/constants/chat";
@@ -57,7 +57,7 @@ export async function sendReceiveAndPersist(opts: {
   // (5) Summarize older messages if threshold reached
   if (updatedUI.length >= summaryThreshold) {
     const older = updatedUI.slice(0, -2).map(m => ({ role: m.role, content: m.text } as APIMessage));
-    const summary = await summarize(older);
+    const summary = await summarize(older, token);
     await saveChunk(sessionId, older, summary, token);
 
     // Optionally keep UI light:
