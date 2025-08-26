@@ -3,12 +3,9 @@
 import express from "express";
 import { custom, z } from "zod";
 import { createClient } from "@supabase/supabase-js";
-import OpenAI from "openai";
-import dotenv from "dotenv";
 import { v4 as uuidv4 } from 'uuid';
 import { generateForFolder } from "./art.js";
-import { v2 as cloudinary } from "cloudinary";
-dotenv.config();
+import openai from "../lib/openai.js";
 
 const router = express.Router();
 
@@ -27,15 +24,6 @@ function supabaseForUser(accessToken) {
     }
   );
 }
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure:     true,
-});
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 /* ==========
    Zod Schemas
@@ -336,7 +324,7 @@ if (bfErr) return res.status(500).json({ error: bfErr.message, where: 'rpc backf
     // Kick off brand thumbnail + DCA avatar generation
 try {
   const folder_id = folder.id;
-  await generateForFolder({ sb, user_id, folder_id, openai, cloudinary });
+  await generateForFolder({ sb, user_id, folder_id });
 } catch (e) {
   console.warn("art/generate-for-folder failed:", e?.message || e);
 }
