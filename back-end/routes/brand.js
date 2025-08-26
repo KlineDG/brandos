@@ -4,7 +4,7 @@ import express from "express";
 import { custom, z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import { v4 as uuidv4 } from 'uuid';
-import { generateForFolder } from "./art.js";
+import { generateForFolder } from "../services/art.js";
 import openai from "../lib/openai.js";
 
 const router = express.Router();
