@@ -2,7 +2,6 @@
 
 import express from "express";
 import { dalleBuffer, uploadToCloudinaryBuffer } from "../services/imageGeneration.js";
-import { getImagePromptsForFolder } from "../services/artPrompts.js";
 
 import { supabaseForUser } from "../lib/supabase.js";
 
