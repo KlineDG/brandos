@@ -3,7 +3,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { OpenAI } from "openai";
+import OpenAI from "openai";
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 if (!OPENAI_API_KEY) {
@@ -20,7 +20,7 @@ const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
  * @param {number} [opts.timeoutMs=30000]
  * @returns {Promise<string>}
  */
-export async function actionCall(messages, opts = {}) {
+export default async function actionCall(messages, opts = {}) {
   if (!Array.isArray(messages)) {
     throw new Error("messages must be an array");
   }

@@ -10,7 +10,7 @@ import dotenv from 'dotenv';
 dotenv.config(); // Load environment variables from .env file
 
 const PORT = process.env.PORT || 3003;
-const app = express(express.json());
+const app = express();
 
 app.use(cors({ origin: "http://localhost:3000" }));
 app.use(express.json());

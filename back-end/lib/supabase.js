@@ -21,12 +21,11 @@ export function supabaseForUser(accessToken) {
 }
 
 /**
- * Create a service client (full privileges with SERVICE_ROLE_KEY).
+ * Create a service client (full privileges with ANON_KEY).
  * Use only for backend jobs, never expose to frontend.
  */
 export function supabaseService() {
-  return createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
+  const key = process.env.SUPABASE_ANON_KEY;
+  if (!key) throw new Error("Missing SUPABASE_ANON_KEY");
+  return createClient(process.env.SUPABASE_URL, key);
 }
