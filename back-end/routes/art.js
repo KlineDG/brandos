@@ -1,21 +1,15 @@
 // routes/art.js
 
 import express from "express";
-import { createClient } from "@supabase/supabase-js";
 import openai from "../lib/openai.js";
 import cloudinary from "../lib/cloudinary.js";
+import { supabaseForUser } from "../lib/supabase.js";
 
 const router = express.Router();
 
 /* ------------------------------------------------------------------ */
 /* Setup helpers                                                      */
 /* ------------------------------------------------------------------ */
-function sbForUser(accessToken) {
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
-    global: { headers: { Authorization: `Bearer ${accessToken}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
 
 function cdnUrl(publicId) {
   const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME;
@@ -171,7 +165,7 @@ router.post("/generate-from-prompt", async (req, res) => {
     ]);
     const safeKind = allowedKinds.has(kind) ? kind : "generated";
 
-    const sb = sbForUser(token);
+    const sb = supabaseForUser(token);
     const { data: uData, error: uErr } = await sb.auth.getUser();
     if (uErr || !uData?.user) return res.status(401).json({ error: "Auth failed" });
     const user_id = uData.user.id;
