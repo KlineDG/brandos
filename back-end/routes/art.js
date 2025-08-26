@@ -2,10 +2,8 @@
 
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
-import OpenAI from "openai";
-import { v2 as cloudinary } from "cloudinary";
-import dotenv from "dotenv";
-dotenv.config();
+import openai from "../lib/openai.js";
+import cloudinary from "../lib/cloudinary.js";
 
 const router = express.Router();
 
@@ -18,15 +16,6 @@ function sbForUser(accessToken) {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure:     true,
-});
 
 function cdnUrl(publicId) {
   const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME;
@@ -41,7 +30,7 @@ function sizeForAR(ar) {
 }
 
 // 1) DALL·E 3: always return a Buffer
-export async function dalleBuffer({ openai, prompt, size = "1024x1024", negative = "" }) {
+export async function dalleBuffer({ prompt, size = "1024x1024", negative = "" }) {
   const fullPrompt = negative ? `${prompt}\n\nAvoid: ${negative}` : prompt;
   const resp = await openai.images.generate({
     model: "dall-e-3",
@@ -57,7 +46,7 @@ export async function dalleBuffer({ openai, prompt, size = "1024x1024", negative
 
 // 2) Cloudinary upload: require a Buffer
 // services/artGeneration.js (or wherever your helper lives)
-export async function uploadToCloudinaryBuffer({ cloudinary, buffer, publicId, folder = "brandos" }) {
+export async function uploadToCloudinaryBuffer({ buffer, publicId, folder = "brandos" }) {
   if (!Buffer.isBuffer(buffer)) {
     throw new Error(`uploadToCloudinaryBuffer: expected Buffer, got ${Object.prototype.toString.call(buffer)}`);
   }
@@ -84,7 +73,7 @@ export async function uploadToCloudinaryBuffer({ cloudinary, buffer, publicId, f
 /* ------------------------------------------------------------------ */
 /* GPT prompt crafting for folder (Brand + DCA → image prompts)       */
 /* ------------------------------------------------------------------ */
-export async function getImagePromptsForFolder(openai, brand, dca) {
+export async function getImagePromptsForFolder(brand, dca) {
   const system = `Return JSON ONLY:
 {"brand_thumbnail":{"prompt":string,"negative":string,"aspect_ratio":"16:9"|"1:1"|"9:16"},
  "dca_avatar":{"prompt":string,"negative":string,"aspect_ratio":"1:1"}}
@@ -194,11 +183,10 @@ router.post("/generate-from-prompt", async (req, res) => {
     }
 
     // 1) Generate
-    const buf = await dalleBuffer({ openai, prompt, size, negative });
+    const buf = await dalleBuffer({ prompt, size, negative });
 
     // 2) Upload (let Cloudinary pick an ID if hint is empty)
     const up = await uploadToCloudinaryBuffer({
-      cloudinary,
       buffer: buf,
       publicId: public_id_hint || undefined,
     });
@@ -254,7 +242,7 @@ router.post("/generate-from-prompt", async (req, res) => {
  */
 
 // Minimal service you can call from /finalize
-export async function generateForFolder({ sb, user_id, folder_id, openai, cloudinary }) {
+export async function generateForFolder({ sb, user_id, folder_id }) {
   // 1) Load folder + brand + dca
   const { data: folder, error: fErr } = await sb
     .from("folders").select("id,user_id,brand_id,dca_id").eq("id", folder_id).maybeSingle();
@@ -272,7 +260,7 @@ export async function generateForFolder({ sb, user_id, folder_id, openai, cloudi
 
   // 2) GPT makes prompts
   const { brandPrompt, brandNegative, brandSize, dcaPrompt, dcaNegative, dcaSize } =
-    await getImagePromptsForFolder(openai, brand, dca);
+    await getImagePromptsForFolder(brand, dca);
 
   const ok = new Set(["1024x1024","1792x1024","1024x1792"]);
     if (!ok.has(brandSize) || !ok.has(dcaSize)) {
@@ -281,16 +269,16 @@ export async function generateForFolder({ sb, user_id, folder_id, openai, cloudi
 
   // 3) Generate images (DALL·E 3)
 const [brandBuf, dcaBuf] = await Promise.all([
-  dalleBuffer({ openai, prompt: brandPrompt, size: brandSize, negative: brandNegative }),
-  dalleBuffer({ openai, prompt: dcaPrompt,   size: dcaSize,   negative: dcaNegative   }),
+  dalleBuffer({ prompt: brandPrompt, size: brandSize, negative: brandNegative }),
+  dalleBuffer({ prompt: dcaPrompt,   size: dcaSize,   negative: dcaNegative   }),
 ]);
 
 console.log("isBuffer?", Buffer.isBuffer(brandBuf), Buffer.isBuffer(dcaBuf), brandSize, dcaSize);
 
   // 4) Upload to Cloudinary
  const [brandUp, dcaUp] = await Promise.all([
-  uploadToCloudinaryBuffer({ cloudinary, buffer: brandBuf, publicId: `brand_${folder_id}` }),
-  uploadToCloudinaryBuffer({ cloudinary, buffer: dcaBuf,   publicId: `dca_${folder_id}` }),
+  uploadToCloudinaryBuffer({ buffer: brandBuf, publicId: `brand_${folder_id}` }),
+  uploadToCloudinaryBuffer({ buffer: dcaBuf,   publicId: `dca_${folder_id}` }),
 ]);
 
 console.log("cloudinary cloud:", cloudinary.config().cloud_name);
