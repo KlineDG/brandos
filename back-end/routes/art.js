@@ -3,7 +3,11 @@
 import express from "express";
 import openai from "../lib/openai.js";
 import cloudinary from "../lib/cloudinary.js";
+
 import { supabaseForUser } from "../lib/supabase.js";
+
+import { cdnUrl, sizeForAR } from "../lib/image.js";
+
 
 const router = express.Router();
 
@@ -11,17 +15,6 @@ const router = express.Router();
 /* Setup helpers                                                      */
 /* ------------------------------------------------------------------ */
 
-function cdnUrl(publicId) {
-  const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME;
-  return `https://res.cloudinary.com/${cloud}/image/upload/f_auto,q_auto/${publicId}`;
-}
-
-function sizeForAR(ar) {
-  const s = (ar || "").trim();
-  if (s === "16:9") return "1792x1024";
-  if (s === "9:16") return "1024x1792";
-  return "1024x1024"; // 1:1 default
-}
 
 // 1) DALL·E 3: always return a Buffer
 export async function dalleBuffer({ prompt, size = "1024x1024", negative = "" }) {
