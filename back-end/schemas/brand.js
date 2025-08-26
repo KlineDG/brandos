@@ -1,4 +1,5 @@
 // schemas/brand.js
+import { z } from "zod";
 
 export const PlatformItem = z.object({
   name: z.string().min(1),
