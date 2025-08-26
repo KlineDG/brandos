@@ -1,8 +1,9 @@
 // services/art.js
 
-import { getImagePromptsForFolder } from "./artPrompts.js";
-import { dalleBuffer, uploadToCloudinaryBuffer } from "./imageGeneration.js";
-import cloudinary from "../lib/cloudinary.js";
+
+import { getImagePromptsForFolder } from "../services/artPrompts.js";
+import { dalleBuffer, uploadToCloudinaryBuffer } from "../services/imageGeneration.js";
+
 
 export async function generateForFolder({ sb, user_id, folder_id }) {
   // 1) Load folder + brand + dca

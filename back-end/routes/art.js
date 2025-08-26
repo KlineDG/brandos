@@ -11,8 +11,6 @@ import { cdnUrl } from "../lib/image.js";
 
 const router = express.Router();
 
-
-
 /* ------------------------------------------------------------------ */
 /* A) Generic: generate from a prompt                                  */
 /* ------------------------------------------------------------------ */
