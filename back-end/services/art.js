@@ -1,6 +1,7 @@
 // services/art.js
 
-import { getImagePromptsForFolder, dalleBuffer, uploadToCloudinaryBuffer } from "../routes/art.js";
+import { getImagePromptsForFolder } from "./artPrompts.js";
+import { dalleBuffer, uploadToCloudinaryBuffer } from "./imageGeneration.js";
 import cloudinary from "../lib/cloudinary.js";
 
 export async function generateForFolder({ sb, user_id, folder_id }) {
