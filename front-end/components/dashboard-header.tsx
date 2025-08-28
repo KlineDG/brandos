@@ -6,8 +6,11 @@ import { Bell } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
+import { useState } from "react";
 
 export default function DashboardHeader({ user }: { user: User | null }) {
+  const [open, setOpen] = useState(false);
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-hairline bg-[hsl(var(--bg)/0.85)] backdrop-blur">
       <div className="h-16 px-4 flex items-center justify-between">
@@ -22,8 +25,12 @@ export default function DashboardHeader({ user }: { user: User | null }) {
             Upgrade
           </Link>
           <Bell className="h-5 w-5" />
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
+          <DropdownMenu.Root open={open} onOpenChange={setOpen}>
+            <DropdownMenu.Trigger
+              asChild
+              onMouseEnter={() => setOpen(true)}
+              onMouseLeave={() => setOpen(false)}
+            >
               <button className="w-8 h-8 rounded-full overflow-hidden border">
                 {user?.avatar_url ? (
                   <Image
@@ -43,6 +50,8 @@ export default function DashboardHeader({ user }: { user: User | null }) {
             <DropdownMenu.Content
               align="end"
               className="min-w-[160px] bg-popover text-popover-foreground rounded-md shadow-md p-1"
+              onMouseEnter={() => setOpen(true)}
+              onMouseLeave={() => setOpen(false)}
             >
               <DropdownMenu.Item asChild>
                 <Link
