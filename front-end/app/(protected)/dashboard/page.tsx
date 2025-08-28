@@ -5,7 +5,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Copy, Trash2, Pencil, Star, User, RotateCcw } from "lucide-react";
-import Header from "@/components/header";
 import Sidebar from "@/components/sidebar";
 import ChatInput from "@/components/chat-input";
 import ReactMarkdown from "react-markdown";
@@ -32,8 +31,8 @@ export default function ChatDashboard() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typing, setTyping] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [user, setUser] = useState<any | null>(null);
-  const [folders, setFolders] = useState<any[]>([]);
+  const [user, setUser] = useState<Record<string, unknown> | null>(null);
+  const [folders, setFolders] = useState<Record<string, unknown>[]>([]);
 
   const listRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
@@ -150,7 +149,6 @@ console.log("Hello World!");
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
       <div className="flex flex-1 min-h-0">
         {navOpen && <Sidebar folders={folders} />}
 

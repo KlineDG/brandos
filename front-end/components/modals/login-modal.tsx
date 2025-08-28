@@ -44,8 +44,9 @@ export default function LoginModal({
     // success
     onOpenChangeAction(false);   // close modal
     onSuccess?.();               // parent does router.push("/dashboard")
-  } catch (err: any) {
-    setError(err?.message ?? "Unexpected error");
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unexpected error";
+    setError(message);
   } finally {
     setSubmitting(false);
   }

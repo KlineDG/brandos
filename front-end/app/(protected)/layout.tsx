@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "../globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import DashboardHeader from "@/components/dashboard-header";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -31,10 +32,16 @@ export default async function RootLayout({
   if (!session) {
     redirect("/marketing");
   }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen antialiased">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <DashboardHeader user={user} />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
