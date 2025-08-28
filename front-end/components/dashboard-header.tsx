@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Bell } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import ModeToggle from "@/components/mode-toggle";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { useState } from "react";
@@ -13,17 +14,19 @@ export default function DashboardHeader({ user }: { user: User | null }) {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-hairline bg-[hsl(var(--bg)/0.85)] backdrop-blur">
-      <div className="h-16 px-4 flex items-center justify-between">
+      <div className="h-20 px-6 sm:px-8 flex items-center justify-between">
         <Link href="/" className="font-medium tracking-tight text-xl">
           brand<span className="text-primary">OS</span>
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4 sm:gap-5">
           <Link
             href="/upgrade"
             className="rounded-md px-3 py-2 bg-primary text-primaryFg text-sm hover:opacity-95 transition"
           >
             Upgrade
           </Link>
+
+          <ModeToggle />
           <Bell className="h-5 w-5" />
           <DropdownMenu.Root open={open} onOpenChange={setOpen}>
             <DropdownMenu.Trigger
@@ -32,12 +35,13 @@ export default function DashboardHeader({ user }: { user: User | null }) {
               onMouseLeave={() => setOpen(false)}
             >
               <button className="w-8 h-8 rounded-full overflow-hidden border">
+
                 {user?.avatar_url ? (
                   <Image
                     src={user.avatar_url}
                     alt="Avatar"
-                    width={32}
-                    height={32}
+                    width={40}
+                    height={40}
                     className="object-cover"
                   />
                 ) : (
