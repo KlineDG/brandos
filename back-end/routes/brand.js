@@ -1,11 +1,12 @@
 // routes/brand.js
 
 import express from "express";
-import { createClient } from "@supabase/supabase-js";
-import { v4 as uuidv4 } from 'uuid';
 import { generateForFolder } from "../services/art.js";
-import openai from "../lib/openai.js";
 import { PlatformItem, BrandZ, DcaZ, FinalZ } from "../schemas/brand.js";
+import { supabaseForUser } from "../lib/supabase.js";
+import { buildContextForSession } from "../lib/context.js";
+import { getChatJSON } from "../lib/openai.js";
+import { BRAND_FINALIZE_PROMPT } from "../prompts/brand.js";
 
 const router = express.Router();
 
@@ -13,71 +14,6 @@ const router = express.Router();
    Config helpers
    ============== */
 const MESSAGE_TEXT_COLUMN = "content"; // ← change to "content" if that's your column
-
-function supabaseForUser(accessToken) {
-  return createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY,
-    {
-      global: { headers: { Authorization: `Bearer ${accessToken}` } },
-      auth: { persistSession: false, autoRefreshToken: false },
-    }
-  );
-}
-
-
-
-/* =========================
-   Context & OpenAI helpers
-   ========================= */
-async function buildContextForSession(sb, session_id) {
-  // Summaries (long-term)
-  const { data: chunks, error: chunksErr } = await sb
-    .from("memory_chunks")
-    .select("summary, created_at")
-    .eq("session_id", session_id)
-    .order("created_at", { ascending: true });
-  if (chunksErr) throw chunksErr;
-
-  const longTermSummary = (chunks ?? [])
-    .map((c) => (c.summary || "").trim())
-    .filter(Boolean)
-    .join("\n\n");
-
-  // Recent raw turns
-  const { data: msgs, error: msgErr } = await sb
-    .from("messages")
-    .select(`role, ${MESSAGE_TEXT_COLUMN}, created_at`)
-    .eq("session_id", session_id)
-    .order("created_at", { ascending: false })
-    .limit(15);
-  if (msgErr) throw msgErr;
-
-  const recent = (msgs ?? []).reverse(); // oldest → newest
-
-  const system = {
-    role: "system",
-    content: BRAND_FINALIZE_PROMPT,
-  };
-
-  const userBlob = [
-    longTermSummary ? `== CONVERSATION RECAP ==\n${longTermSummary}` : null,
-    "== RECENT TURNS ==",
-    ...recent.map((m) => `[${m.role}] ${m[MESSAGE_TEXT_COLUMN] ?? ""}`),
-  ].filter(Boolean).join("\n");
-
-  return [system, { role: "user", content: userBlob }];
-}
-
-async function callOpenAIJSON(messages) {
-  const resp = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    response_format: { type: "json_object" },
-    temperature: 0,
-    messages,
-  });
-  return resp.choices?.[0]?.message?.content || "{}";
-}
 
 /* =========================
    POST /brand/generate
@@ -90,16 +26,18 @@ router.post("/generate", async (req, res) => {
     if (!session_id) return res.status(400).json({ error: "Missing session_id" });
 
     const sb = supabaseForUser(token);
-    const msgs = await buildContextForSession(sb, session_id);
-    const raw = await callOpenAIJSON(msgs);
+    const msgs = await buildContextForSession(sb, session_id, { messageColumn: MESSAGE_TEXT_COLUMN });
 
     let json;
-    try { json = JSON.parse(raw); }
-    catch { return res.status(500).json({ error: "Model did not return valid JSON", raw }); }
+    try {
+      json = await getChatJSON([{ role: "system", content: BRAND_FINALIZE_PROMPT }, ...msgs]);
+    } catch {
+      return res.status(500).json({ error: "Model did not return valid JSON" });
+    }
 
     const parsed = FinalZ.safeParse(json);
     if (!parsed.success) {
-      return res.status(400).json({ error: "Validation failed", issues: parsed.error.format(), raw });
+      return res.status(400).json({ error: "Validation failed", issues: parsed.error.format(), raw: json });
     }
     return res.status(200).json(parsed.data); // { brand, dca }
   } catch (e) {
@@ -147,16 +85,17 @@ router.post("/generate", async (req, res) => {
     }
 
     // Build → Generate JSON
-    const messagesForModel = await buildContextForSession(sb, session_id);
-    const raw = await callOpenAIJSON(messagesForModel);
-
+    const msgs = await buildContextForSession(sb, session_id, { messageColumn: MESSAGE_TEXT_COLUMN });
     let json;
-    try { json = JSON.parse(raw); }
-    catch { return res.status(500).json({ error: "Model did not return valid JSON", raw }); }
+    try {
+      json = await getChatJSON([{ role: "system", content: BRAND_FINALIZE_PROMPT }, ...msgs]);
+    } catch {
+      return res.status(500).json({ error: "Model did not return valid JSON" });
+    }
 
     const parsed = FinalZ.safeParse(json);
     if (!parsed.success) {
-      return res.status(400).json({ error: "Validation failed", issues: parsed.error.format(), raw });
+      return res.status(400).json({ error: "Validation failed", issues: parsed.error.format(), raw: json });
     }
     const { brand, dca } = parsed.data;
 
