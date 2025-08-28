@@ -100,7 +100,7 @@ export default function Landing() {
           setLoginOpen(false);
           setSignupOpen(true);
         }}
-        onSuccess={() => router.push("/app/dashboard")}
+          onSuccess={() => router.push("/dashboard")}
       />
     </div>
   );
