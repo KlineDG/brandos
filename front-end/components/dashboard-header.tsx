@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Bell } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import ModeToggle from "@/components/mode-toggle";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
@@ -21,7 +22,11 @@ export default function DashboardHeader({ user }: { user: User | null }) {
           >
             Upgrade
           </Link>
-          <Bell className="h-6 w-6" />
+
+          <ModeToggle />
+          <Bell className="h-5 w-5" />
+
+
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <button className="w-10 h-10 rounded-full overflow-hidden border">
