@@ -29,7 +29,7 @@ export default async function RootLayout({
     data: { session },
   } = await supabase.auth.getSession();
   if (!session) {
-    redirect("/marketing/login");
+    redirect("/marketing");
   }
   return (
     <html lang="en" suppressHydrationWarning>

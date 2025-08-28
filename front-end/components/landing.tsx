@@ -91,7 +91,7 @@ export default function Landing() {
           setLoginOpen(true);
           setSignupOpen(false);
         }}
-        onSuccess={() => router.push("/new")}
+        onSuccess={() => router.push("/dashboard")}
       />
       <LoginModal
         open={loginOpen}
