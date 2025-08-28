@@ -1,20 +1,12 @@
 // routes/chunks.js
 
 import express from "express";
-import { OpenAI } from "openai";
-import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
+import { supabaseForUser } from "../lib/supabase.js";
 
 dotenv.config();
 
 const router = express.Router();
-
-// Init OpenAI and Supabase clients
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
 
 router.use(express.json());
 
@@ -24,9 +16,7 @@ router.post("/save", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) return res.status(401).json({ error: "No token provided" });
 
-    const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-    });
+    const sb = supabaseForUser(token);
 
     const { data: uData, error: uErr } = await sb.auth.getUser();
     if (uErr || !uData?.user) return res.status(401).json({ error: "Auth failed" });
@@ -91,9 +81,7 @@ router.post("/messages/save", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) return res.status(401).json({ error: "No token provided" });
 
-    const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-    });
+    const sb = supabaseForUser(token);
 
     const { data: uData, error: uErr } = await sb.auth.getUser();
     if (uErr || !uData?.user) return res.status(401).json({ error: "Auth failed" });
@@ -155,9 +143,7 @@ router.get("/summary", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) return res.status(401).json({ error: "No token" });
 
-    const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-    });
+    const sb = supabaseForUser(token);
 
     // accept both session_id and sessionId
     const session_id = req.query.session_id || req.query.sessionId;
