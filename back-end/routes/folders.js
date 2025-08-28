@@ -1,6 +1,6 @@
 // routes/folders.js
 import express from "express";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseForUser } from "../lib/supabase.js";
 
 const router = express.Router();
 
@@ -9,9 +9,7 @@ router.post("/create", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) return res.status(401).json({ error: "No token" });
 
-    const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-    });
+    const sb = supabaseForUser(token);
 
     const { data: uData, error: uErr } = await sb.auth.getUser();
     if (uErr || !uData?.user) return res.status(401).json({ error: "Auth failed" });
