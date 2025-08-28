@@ -14,6 +14,7 @@ import rehypeSanitize from "rehype-sanitize";
 import { getCurrentUser } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import Router from "next/router";
 
 // Types
 interface ChatMessage {
@@ -24,6 +25,9 @@ interface ChatMessage {
 }
 
 export default function ChatDashboard() {
+
+  const router = Router;
+
   const [navOpen, setNavOpen] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typing, setTyping] = useState(false);
@@ -37,6 +41,11 @@ export default function ChatDashboard() {
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push("/marketing");
+        return;
+      };
 
       const userId = user?.id || null;
       const fullUser = await getCurrentUser();
