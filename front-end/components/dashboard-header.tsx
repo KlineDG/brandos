@@ -14,7 +14,7 @@ export default function DashboardHeader({ user }: { user: User | null }) {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-hairline bg-[hsl(var(--bg)/0.85)] backdrop-blur">
-      <div className="h-20 px-6 sm:px-8 flex items-center justify-between">
+      <div className="h-16 px-6 sm:px-8 flex items-center justify-between">
         <Link href="/" className="font-medium tracking-tight text-xl">
           brand<span className="text-primary">OS</span>
         </Link>
