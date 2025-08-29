@@ -4,8 +4,10 @@ import Header from "@/components/header";
 import ChatInput from "@/components/chat-input";
 import SignupModal from "@/components/modals/signup-modal";
 import LoginModal from "@/components/modals/login-modal";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
+import { supabase, getAccessToken } from "@/lib/supabase";
 
 const placeholderBrands = [
   { id: "b1", name: "Budget Skincare", tagline: "Clear skin without breaking the bank." },
@@ -22,6 +24,75 @@ export default function Landing() {
   const [signupOpen, setSignupOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([]);
+
+  // Load cached messages on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("landing_messages");
+      if (raw) setMessages(JSON.parse(raw));
+    } catch (e) {
+      console.error("failed to parse cached messages", e);
+    }
+  }, []);
+
+  // Mirror messages to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("landing_messages", JSON.stringify(messages));
+    } catch (e) {
+      console.error("failed to cache messages", e);
+    }
+  }, [messages]);
+
+  async function handlePrompt(v: string) {
+    const userMsg = { role: "user" as const, text: v };
+    const outbound = [...messages, userMsg].map(m => ({ role: m.role, content: m.text }));
+    try {
+      const res = await api.post<{ text: string }>("/chat/text", { messages: outbound });
+      const assistantMsg = { role: "assistant" as const, text: res.text };
+      setMessages(prev => [...prev, userMsg, assistantMsg]);
+    } catch (e) {
+      console.error("chat error", e);
+    }
+  }
+
+  async function handleSignupSuccess() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const token = await getAccessToken();
+      if (user && token) {
+        // Find or create "General Chat" folder
+        let folderId: string | null = null;
+        const { data: existing } = await supabase
+          .from("folders")
+          .select("id")
+          .eq("name", "general_chat")
+          .maybeSingle();
+        if (existing?.id) {
+          folderId = existing.id;
+        } else {
+          const { data: created } = await supabase
+            .from("folders")
+            .insert({ name: "general_chat", custom_name: "General Chat" })
+            .select("id")
+            .single();
+          folderId = created?.id ?? null;
+        }
+
+        if (folderId && messages.length) {
+          await api.post("/messages/save", { user_id: user.id, folder_id: folderId, messages }, token);
+          await api.post("/chunks/create", { user_id: user.id, folder_id: folderId, messages }, token);
+          localStorage.removeItem("landing_messages");
+          setMessages([]);
+        }
+      }
+    } catch (e) {
+      console.error("backfill failed", e);
+    } finally {
+      router.push("/dashboard");
+    }
+  }
 
   const grid = useMemo(() => placeholderBrands, []);
 
@@ -56,10 +127,19 @@ export default function Landing() {
             {/* Chat bar */}
             <div className="mt-12 flex justify-center">
               <div className="w-full max-w-2xl">
+                {messages.length > 0 && (
+                  <div className="mb-6 space-y-2 max-h-60 overflow-y-auto">
+                    {messages.map((m, i) => (
+                      <div key={i} className={m.role === "assistant" ? "text-left" : "text-right"}>
+                        <span className="text-sm opacity-80">{m.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <ChatInput
                   placeholder='Ask BrandBot… e.g., "3 brand ideas for a fitness creator"'
                   onChange={(v) => setTyping(!!v)}
-                  onSubmit={() => setSignupOpen(true)}
+                  onSubmit={handlePrompt}
                 />
                 <p className="mt-4 text-xs opacity-60 text-center">
                   Tip: Try “Generate a brand concept for budget skincare targeting students.”
@@ -87,11 +167,11 @@ export default function Landing() {
       <SignupModal
         open={signupOpen}
         onOpenChangeAction={setSignupOpen}
-        onSwitchToSignup={() => { 
+        onSwitchToSignup={() => {
           setLoginOpen(true);
           setSignupOpen(false);
         }}
-        onSuccess={() => router.push("/dashboard")}
+        onSuccess={handleSignupSuccess}
       />
       <LoginModal
         open={loginOpen}
