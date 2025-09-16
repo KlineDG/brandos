@@ -6,9 +6,11 @@ import { Bell } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import ModeToggle from "@/components/mode-toggle";
 import { supabase } from "@/lib/supabase";
-import type { User } from "@supabase/supabase-js";
+import type { CurrentUser } from "@/lib/utils";
 
-export default function DashboardHeader({ user }: { user: User | null }) {
+export default function DashboardHeader({ user }: { user: CurrentUser | null }) {
+  const avatarUrl = user?.avatar_url ?? undefined;
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-hairline bg-[hsl(var(--bg)/0.85)] backdrop-blur">
       <div className="h-16 px-6 sm:px-8 flex items-center justify-between">
@@ -29,9 +31,9 @@ export default function DashboardHeader({ user }: { user: User | null }) {
             <DropdownMenu.Trigger asChild>
               <button className="w-8 h-8 rounded-full overflow-hidden border">
 
-                {user?.avatar_url ? (
+                {avatarUrl ? (
                   <Image
-                    src={user.avatar_url}
+                    src={avatarUrl}
                     alt="Avatar"
                     width={40}
                     height={40}

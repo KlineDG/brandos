@@ -4,7 +4,7 @@ import Header from "@/components/header";
 import ChatInput from "@/components/chat-input";
 import SignupModal from "@/components/modals/signup-modal";
 import LoginModal from "@/components/modals/login-modal";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { supabase, getAccessToken } from "@/lib/supabase";
@@ -25,25 +25,6 @@ export default function Landing() {
   const [loginOpen, setLoginOpen] = useState(false);
   const [typing, setTyping] = useState(false);
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([]);
-
-  // Load cached messages on mount
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("landing_messages");
-      if (raw) setMessages(JSON.parse(raw));
-    } catch (e) {
-      console.error("failed to parse cached messages", e);
-    }
-  }, []);
-
-  // Mirror messages to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem("landing_messages", JSON.stringify(messages));
-    } catch (e) {
-      console.error("failed to cache messages", e);
-    }
-  }, [messages]);
 
   async function handlePrompt(v: string) {
     const userMsg = { role: "user" as const, text: v };
@@ -83,7 +64,6 @@ export default function Landing() {
         if (folderId && messages.length) {
           await api.post("/messages/save", { user_id: user.id, folder_id: folderId, messages }, token);
           await api.post("/chunks/create", { user_id: user.id, folder_id: folderId, messages }, token);
-          localStorage.removeItem("landing_messages");
           setMessages([]);
         }
       }

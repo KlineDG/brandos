@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getCurrentUser } from "@/lib/utils";
 
 export default async function AccountPage() {
   const cookieStore = await cookies();
@@ -15,9 +16,10 @@ export default async function AccountPage() {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
+
+  const avatarUrl = user?.avatar_url ?? undefined;
+  const email = user?.email ?? null;
 
   return (
     <div className="p-6">
@@ -25,9 +27,9 @@ export default async function AccountPage() {
       {user ? (
         <div className="space-y-6">
           <div className="flex items-center gap-4">
-            {user.avatar_url ? (
+            {avatarUrl ? (
               <Image
-                src={user.avatar_url}
+                src={avatarUrl}
                 alt="Avatar"
                 width={64}
                 height={64}
@@ -39,7 +41,7 @@ export default async function AccountPage() {
               </div>
             )}
             <div>
-              <p className="text-lg font-medium">{user.email}</p>
+              <p className="text-lg font-medium">{email ?? "No email found"}</p>
             </div>
           </div>
 

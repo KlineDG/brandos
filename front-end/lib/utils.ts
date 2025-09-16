@@ -1,35 +1,66 @@
 // front-end/lib/utils.ts
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-export async function getCurrentUser() {
-  // Step 1: Get the authenticated user from Supabase Auth
+
+export type CurrentUser = {
+  id: string;
+  email?: string | null;
+  avatar_url?: string | null;
+  [key: string]: unknown;
+};
+
+export async function getCurrentUser(
+  client?: SupabaseClient
+): Promise<CurrentUser | null> {
+  const supabaseClient = client ?? supabase;
+
   const {
-    data: { user },
+    data: { user: authUser },
     error: authError,
-  } = await supabase.auth.getUser();
+  } = await supabaseClient.auth.getUser();
 
-  if (authError || !user) {
-    console.error("Auth error or no user found:", authError?.message);
-    return null;
-  }
-  // Step 2: Use the email from auth to fetch full user record from your 'users' table
-const { data, error } = await supabase
-  .from("users")
-  .select("*")
-  .eq("id", user.id)   // <-- safer than ilike(email)
-  .maybeSingle();
-
-  if (error) {
-    console.error("Error fetching user details:", error.message);
+  if (authError) {
+    console.error("Auth error while fetching user:", authError.message);
     return null;
   }
 
-  return data; // Full user record or null
+  if (!authUser) {
+    return null;
+  }
+
+  const { data: profile, error: profileError } = await supabaseClient
+    .from("users")
+    .select("*")
+    .eq("id", authUser.id)
+    .maybeSingle();
+
+  if (profileError) {
+    console.error("Error fetching user profile:", profileError.message);
+    return null;
+  }
+
+  const profileData = (profile ?? {}) as Record<string, unknown> & {
+    id?: string;
+    email?: string | null;
+    avatar_url?: string | null;
+  };
+
+  const metadataAvatar = (
+    authUser.user_metadata as { avatar_url?: string | null } | null | undefined
+  )?.avatar_url;
+
+  return {
+    ...profileData,
+    id: profileData.id ?? authUser.id,
+    email: profileData.email ?? authUser.email ?? null,
+    avatar_url: profileData.avatar_url ?? metadataAvatar ?? null,
+  } satisfies CurrentUser;
 }
 
 

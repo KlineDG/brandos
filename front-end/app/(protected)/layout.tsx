@@ -5,6 +5,7 @@ import DashboardHeader from "@/components/dashboard-header";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "brandOS",
@@ -32,9 +33,7 @@ export default async function RootLayout({
   if (!session) {
     redirect("/marketing");
   }
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser(supabase);
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen antialiased">

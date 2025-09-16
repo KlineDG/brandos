@@ -10,7 +10,6 @@ import ChatInput from "@/components/chat-input";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
-import { getCurrentUser } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import Router from "next/router";
@@ -30,8 +29,6 @@ export default function ChatDashboard() {
   const [navOpen, setNavOpen] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typing, setTyping] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [folders, setFolders] = useState<Record<string, unknown>[]>([]);
 
   const listRef = useRef<HTMLDivElement>(null);
@@ -39,18 +36,14 @@ export default function ChatDashboard() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
 
-      if (!user) {
+      if (!authUser) {
         router.push("/marketing");
         return;
       };
-
-      const userId = user?.id || null;
-      const fullUser = await getCurrentUser();
-
-      setUserId(userId);
-      setUser(fullUser);
 
       const { data: folders, error: fErr } = await supabase
       .from("folders")
