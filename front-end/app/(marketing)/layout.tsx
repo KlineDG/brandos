@@ -1,26 +1,15 @@
-import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
-import "../globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "brandOS",
   description: "AI brand creation.",
-}
-  
+};
 
-
-
-
-export default function RootLayout({
+export default function MarketingLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: ReactNode;
 }) {
-  return (
-    <html lang="en">
-      <body>
-        <ThemeProvider>{children}</ThemeProvider>
-      </body>
-    </html>
-  )
+  return <>{children}</>;
 }
